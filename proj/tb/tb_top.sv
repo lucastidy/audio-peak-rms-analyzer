@@ -65,6 +65,36 @@ module tb_top;
     end
   end
 
+  default clocking cb @(posedge clk); endclocking
+
+    // if downstream isn’t ready, the dut must not wiggle outputs while m_valid stays high.
+    property p_m_hold_when_stalled;
+    disable iff (!rst_n)
+    (m_valid && !m_ready) |=> (m_valid && $stable(m_data) && $stable(m_last));
+    endproperty
+
+    assert property (p_m_hold_when_stalled)
+    else $fatal(1, "// m side changed while stalled");
+
+    // checks driver + interface behavior and randomized source.
+    property p_s_hold_when_stalled;
+        disable iff (!rst_n)
+        (s_valid && !s_ready) |=> (s_valid && $stable(s_data) && $stable(s_last));
+    endproperty
+
+    assert property (p_s_hold_when_stalled)
+    else $fatal(1, "// s side changed while stalled");
+
+    // catch junk on handshake signals
+    property p_no_x_handshake;
+        disable iff (!rst_n)
+        !$isunknown({s_valid, s_ready, m_valid, m_ready, m_last, s_last});
+    endproperty
+
+    assert property (p_no_x_handshake)
+    else $fatal(1, "// x detected on handshake signals");
+
+
   // ----------------------------
   // Driver tasks
   // ----------------------------
