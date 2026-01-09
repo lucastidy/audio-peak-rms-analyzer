@@ -1,3 +1,21 @@
+# ----------------------------
+# working for questa / modelSim
+# ----------------------------
+
+# create work library
 vlib work
-vlog -sv ./peak_rms_core.sv ./tb_top.sv
-vsim -c tb_top -do "run -all; quit"
+vmap work work
+
+vlog -sv ../rtl/skid_buffer.sv ../tb/tb_top.sv
+
+# sim
+vsim -coverage work.tb_top
+
+add wave -r /*
+
+run -all
+
+# show coverage in transcript
+coverage report -details
+
+quit -f
